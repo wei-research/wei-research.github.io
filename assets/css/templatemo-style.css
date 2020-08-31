@@ -81,6 +81,15 @@ html {
     box-sizing: inherit;
 }
 
+
+.one {
+  list-style: circle;
+}
+
+.two {
+  list-style: square inside;
+}
+
 .clearfix {
     zoom: 1;
 }
