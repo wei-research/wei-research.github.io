@@ -58,13 +58,14 @@ img {
 }
 
 ul {
-    /* padding: 0; */
-    /* margin: 0; */
+    padding: 0; 
+    margin: 0; 
     list-style: square;
 }
 
 ul li {
     display: inline-block;
+    list-style: square;
 }
 
 html {
