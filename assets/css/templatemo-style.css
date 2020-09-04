@@ -114,7 +114,7 @@ html {
 }
 
 .main-nav li:last-child a {
-    border-bottom: 2px solid #A9A9A9; /****/
+    border-bottom: 2px solid #000; /****/
 }
 
 .main-nav li {
@@ -127,7 +127,7 @@ html {
     display: inline-block;
     font-size: 16px;
     font-weight: 700;
-    color: #A9A9A9; /****/
+    color: #000; /****/
     width: 100%;
     transition: all 0.5s;
     border-top: 2px solid #000; /****/
@@ -265,7 +265,7 @@ html {
     top: 0;
     left: 0;
     color: #a43f49;
-    background-color: #A9A9A9; /****/
+    background-color: #000; /****/
     width: 60px;
     height: 60px;
     text-align: center;
