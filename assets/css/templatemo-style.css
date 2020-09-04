@@ -114,7 +114,7 @@ html {
 }
 
 .main-nav li:last-child a {
-    border-bottom: 2px solid #000; /****/
+    border-bottom: 2px solid #A9A9A9; /****/
 }
 
 .main-nav li {
@@ -127,15 +127,15 @@ html {
     display: inline-block;
     font-size: 16px;
     font-weight: 700;
-    color: #000; /****/
+    color: #A9A9A9; /****/
     width: 100%;
     transition: all 0.5s;
-    border-top: 2px solid #000; /****/
+    border-top: 2px solid ; /****/
 }
 
 .main-nav li:hover a,
 .main-nav li.active a {
-    background: #000; /****/
+    background: #A9A9A9; /****/
     color: #8c363e;
 }
 
@@ -265,7 +265,7 @@ html {
     top: 0;
     left: 0;
     color: #a43f49;
-    background-color: #000; /****/
+    background-color: #A9A9A9; /****/
     width: 60px;
     height: 60px;
     text-align: center;
