@@ -133,7 +133,11 @@ html {
     border-top: 2px solid #fff; /****/
 }
 
-.main-nav li:hover a,
+.main-nav li:hover a {
+    background: #c5e0fa; /* hover */
+    color: #000;/****/ 
+}
+
 .main-nav li.active a {
     background: #fff; /****/
     color: #000;/****/
