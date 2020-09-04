@@ -42,13 +42,13 @@ a:hover {
 p {
     font-size: 16px;
     line-height: 24px;
-    color: #fff;
+    color: #000; /****/
 }
 
 h4 {
     font-size: 26px;
     font-weight: 700;
-    color: #fff;
+    color: #000; /****/
     letter-spacing: 0.25px;
 }
 
@@ -114,7 +114,7 @@ html {
 }
 
 .main-nav li:last-child a {
-    border-bottom: 2px solid #fff;
+    border-bottom: 2px solid #000; /****/
 }
 
 .main-nav li {
@@ -127,15 +127,15 @@ html {
     display: inline-block;
     font-size: 16px;
     font-weight: 700;
-    color: #fff;
+    color: #000; /****/
     width: 100%;
     transition: all 0.5s;
-    border-top: 2px solid #fff;
+    border-top: 2px solid #000; /****/
 }
 
 .main-nav li:hover a,
 .main-nav li.active a {
-    background: #fff;
+    background: #000; /****/
     color: #8c363e;
 }
 
@@ -265,7 +265,7 @@ html {
     top: 0;
     left: 0;
     color: #a43f49;
-    background-color: #fff;
+    background-color: #000; /****/
     width: 60px;
     height: 60px;
     text-align: center;
@@ -281,7 +281,7 @@ html {
     cursor: pointer;
     text-align: right;
     color: #a43f49;
-    background-color: #fff;
+    background-color: #000; /****/
     width: 100%;
     height: 60px;
     text-align: center;
@@ -293,7 +293,7 @@ html {
 /* Section */
 
 .section {
-    color: #fff;
+    color: #000; /****/
     width: 55%;
     right: 10%;
     left: 35%;
@@ -311,7 +311,7 @@ html {
 .section-heading h2 {
     font-size: 32px;
     font-weight: 700;
-    color: #fff;
+    color: #000; /****/
 }
 
 .section-heading .line-dec {
