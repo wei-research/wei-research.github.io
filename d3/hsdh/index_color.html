@@ -1,0 +1,806 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <title>Assembly Data Analysis - by the Advanced Analytics Institute, UTS</title>
+
+        <!-- d3 -->
+        <script type="text/javascript" src="lib/d3/d3.min.js"></script>
+        <script type="text/javascript" src="lib/d3/d3.csv.min.js"></script>
+        <script type="text/javascript" src="lib/d3/d3.parcoords.js"></script>
+
+        <!-- other libs -->
+        <script type="text/javascript" src="lib/jquery.js"></script>
+        <script type="text/javascript" src="lib/underscore.js"></script>
+
+		<!-- leaflet -->
+		<script src="lib/leaflet/leaflet.js"></script>
+		<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+
+		<!-- nsw map -->
+		<script type="text/javascript" src="borders/stateData.geojson"></script>
+		<script type="text/javascript" src="data/hospital.geojson"></script>
+
+        <!-- SlickGrid -->
+        <script type="text/javascript" src="lib/slickgrid/jquery.event.drag-2.0.min.js"></script>
+        <script type="text/javascript" src="lib/slickgrid/slick.core.js"></script>
+        <script type="text/javascript" src="lib/slickgrid/slick.grid.js"></script>
+        <script type="text/javascript" src="lib/slickgrid/slick.dataview.js"></script>
+
+        <!-- StyleSheet -->
+        <link rel="stylesheet" href="lib/slickgrid/slick.grid.css" type="text/css" />
+        <link rel="stylesheet" href="lib/d3/d3.parcoords.css" type="text/css" >
+        <link rel="stylesheet" href="style.css" type="text/css" charset="utf-8" />
+
+        <style>
+            .wrapper {
+/*                width: 3740px;*/
+                width: 6720px;  
+                height: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .col {
+                position: relative;
+                display: inline-block;
+
+                vertical-align: top;
+            }
+
+            .col-content {
+                white-space: normal;
+            }
+
+            .left {
+                width: 20%;
+            }
+            .middle {
+				width: 55%;
+
+            }
+            .right {
+                width: 25%;
+
+            }
+            #map {
+                position: relative;
+		        top: 20px;
+		        width: 100%;
+		        height: 900px;
+            }
+
+            .stations, .stations svg {
+                position: absolute;
+            }
+
+            .stations svg {
+                width: 80px;
+                height: 80px;
+                padding-right: 100px;
+                font: 10px sans-serif;
+            }
+
+            #paracoord {
+		        position: relative;
+		        width: 100%;
+				top: 50px;
+		        height: 1050px;
+	        }
+            #grid {
+		        position: relative;
+		        width: 100%;
+				top: 50px;
+		        height: 950px;
+	        }
+            .slick-row:hover {
+		        font-weight: bold;
+		        color: #069;
+
+
+			// leaflet css
+			}
+			.info {
+				padding: 6px 8px;
+				font: 14px/16px Arial, Helvetica, sans-serif;
+				background: white;
+				background: rgba(255,255,255,0.8);
+				box-shadow: 0 0 15px rgba(0,0,0,0.2);
+				border-radius: 5px;
+			}
+			.info h4 {
+				margin: 0 0 5px;
+				color: #777;
+			}
+
+
+			.legend {
+				text-align: left;
+				line-height: 18px;
+				color: #555;
+			}
+			.legend i {
+				width: 18px;
+				height: 18px;
+				float: left;
+				margin-right: 8px;
+				opacity: 0.7;
+			}
+			.my-leaflet-div-icon {
+				color: #DDD;
+				width: auto;
+				text-shadow:
+				  -1px -1px 1px black,
+				   1px -1px 1px black,
+				  -1px  1px 1px black,
+				   1px  1px 1px black;
+			}
+
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="col left">
+                <div id="main">
+                    <div class="widgets">
+                        <h3><span style="color: #1F6E0C; font-family: Baskerville, 'Palatino Linotype', Palatino, 'Century Schoolbook L', 'Times New Roman', serif; font-style: normal; font-size: x-large;">Assembly Data Analysis &#8212; by the Advanced Analytics Institute, UTS</span></h3>
+						</div>
+                </div>
+                <div id="map"></div>
+            </div>
+            <div class="col middle">
+                <div id="parcoord" class="parcoords" style="height =650px;"></div>
+            </div>
+            <div class="col right">
+                <div id="grid"></div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+
+		var engagementColors = {
+		  "Chat": '#3366cc',
+		  "Email": '#ff9900',
+		  "Have Us Call You": '#990099',
+		  "Newsletter": '#109618',
+		  "Schedule an Appointment": '#dd4477',
+		  "Video Chat": '#0099c6'
+		};
+
+		var myColsGreen = [
+			'#f7fcf5',
+			'#e5f5e0',
+			'#c7e9c0',
+			'#a1d99b',
+			'#74c476',
+			'#41ab5d',
+			'#238b45',
+			'#006d2c',
+			'#00441b',
+			'#002210'
+		];
+		
+		// red yellow brown
+		var myColsRed = [
+			'#808080',
+			'#867979',
+			'#8c7373',
+			'#936c6c',
+			'#996666',
+			'#9f6060',
+			'#a65959',
+			'#ac5353',
+			'#b34d4d',
+			'#b94646',
+			'#bf4040',
+			'#c63939',
+			'#cc3333',
+			'#d22d2d',
+			'#d92626',
+			'#df2020',
+			'#e61919',
+			'#ec1313',
+			'#f20d0d',
+			'#f90606',
+			'#ff0000'
+		];
+
+		myCols = myColsRed;
+
+        var states = stateBorders;
+
+		var minVal = 99.99, maxVal = -0.1;
+		
+		var colorTextMap = d3.scale.linear()
+                            .domain([0, 10, 30, 71, 72, 73, 80, 100])
+                            .range(["darkblue", "black", "black", "black", "black", "white", "white"]);
+
+        var padding = 35;
+
+        var layer, overlay;
+        var filtered;
+
+        var isSelected = false;
+
+		// create leaflet map
+		var map = L.map('map', {zoomControl: true}).setView([39.88, -98.16], 5);
+
+		// prevToken = pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw
+
+		var myToken = 'pk.eyJ1IjoiZHlobCIsImEiOiJjaWtubG5uMWYwc3BmdWNqN2hlMzFsNDhvIn0.027tda69GVKbxiPnkEBDAw';
+
+
+		L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + myToken, {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+				'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+			id: 'mapbox.streets',
+			//id: 'mapbox.basic',
+			//id: 'mapbox.emerald',
+			//id: 'mapbox.light',
+			//id: 'mapbox.bright',
+			//id: 'mapbox.dark',
+			//id: 'mapbox.satellite',
+// 			id: 'dyhl.cilltzgc0006j9dlyzll3jikw',
+// 			styleLayer: 'mapbox://styles/dyhl/cilltzgc0006j9dlyzll3jikw'
+		}).addTo(map);
+
+		// get color depending on population density value
+		// from colorCode/ColorBrewer:
+		function getColor(d) {
+			//return seifaCols[9 - Math.floor(d / 10.0)];
+			return myCols[d % 10.0];
+		}
+
+		function getColorScalar(d) {
+			var myVal = (d - minVal) / (maxVal - minVal);
+			// using myCols
+// 			return myCols[9 - Math.floor(myVal / 10.0)]; // reversed
+//			return myCols[Math.floor(myVal / 10.0) - 1];
+//			console.log(myVal);
+			return myCols[Math.floor(myVal*20)];
+		}
+		
+		function getColorCode(d) {
+			var value = d.chat
+			var topEngagement = "Chat"
+			
+			if(d.email > value) {
+				value = d.email
+				topEngagement = "Email"
+			}
+			
+			if(d.callback > value) {
+				value = d.callback
+				topEngagement = "Have Us Call You"
+			}
+			
+			if(d.newsletter > value) {
+				value = d.newsletter
+				topEngagement = "Newsletter"
+			}
+			
+			if(d.appointment > value) {
+				value = d.appointment
+				topEngagement = "Schedule an Appointment"
+			}
+			
+			if(d.videochat > value) {
+				value = d.videochat
+				topEngagement = "Video chat"
+			}
+			return engagementColors[topEngagement]
+		}
+
+		function getColorScalarRed(d) {
+			return myColsRed[9 - Math.floor(d / 10.0)];
+		}
+
+		function showIt(d) {
+			return d > 0 ? 0.35 : 0;
+		}
+		
+		/*Color of the state*/
+		function style(feature) {
+			return {
+				weight: 1,
+				opacity: 1,
+				color: 'gray',
+				dashArray: '3',
+				fillOpacity: 1.6 * showIt(feature.properties.total),
+				fillColor: getColorCode(feature.properties)
+				//getColorScalar(feature.properties.total/statePopulation[feature.properties.name])
+			};
+		}
+
+		function redStyle(feature) {
+			return {
+				weight: 1,
+				opacity: showIt(feature.properties.data),
+				color: 'white',
+				dashArray: '3',
+				fillOpacity: 0.8 * showIt(feature.properties.data),
+				fillColor: getColorScalarRed(feature.properties.data)
+// 						fillColor: getColor(feature.properties.seifa)
+			};
+		}
+
+		function resetHighlight(e) {
+			geojson.resetStyle(e.target);
+			info.update();
+		}
+
+		function zoomToFeature(e) {
+			map.fitBounds(e.target.getBounds());
+		}
+
+		function onEachFeature(feature, layer) {
+			layer.on({
+				mouseover: highlightFeature,
+				mouseout: resetHighlight,
+				click: zoomToFeature
+			});
+		}
+
+		function highlightFeature(e) {
+			var layer = e.target;
+
+			if (layer._layers) {
+				console.log(layer);
+				layer.eachLayer(function (myLayer) {
+//					console.log(myLayer);
+					myLayer.setStyle({
+						weight: myLayer.options ? (myLayer.options.opacity > 0 ? 3 : 0) : 0,
+						color: '#666',
+						dashArray: '',
+// 						fillOpacity: myLayer.options ? (myLayer.options.opacity > 0 ? 1 : 0) : 0
+					});
+				});
+			} else {
+				layer.setStyle({
+					weight: layer.options ? (layer.options.opacity > 0 ? 3 : 0) : 0,
+					color: '#666',
+					dashArray: '',
+// 					fillOpacity: layer.options ? (layer.options.opacity > 0 ? 1 : 0) : 0
+				});
+			}
+
+			if (!L.Browser.ie && !L.Browser.opera) {
+				layer.bringToFront();
+			}
+
+			info.update(layer.feature.properties);
+		}
+
+        // Create parallel Coordinate
+        var parcoords = d3.parcoords()("#parcoord")
+            .alpha(0.1)
+            .mode("queue") // progressive rendering
+            .height(950)
+            .width(3700)
+            .margin({
+                top: 70,
+                left: 60,
+                right: 0,
+                bottom: 5
+            })
+            .color(function (d) { return engagementColors[d.Engagement] });
+
+		// control that shows state info on hover
+		var info = L.control({position: 'topright'});
+
+		info.onAdd = function (map) {
+			this._div = L.DomUtil.create('div', 'info');
+			this.update();
+			return this._div;
+		};
+
+		info.update = function (props) {
+			this._div.innerHTML = (props ?
+				'<h4>' + props.name + '</h4><br /><i>Per 1,000,000 population</i><br /><br />Total: ' + (props.total/statePopulation[props.name]).toFixed(3)+ '<br /><br />Chat: '+ (props.chat/statePopulation[props.name]).toFixed(3) + '<br />Email: '+ (props.email/statePopulation[props.name]).toFixed(3) + '<br />Have Us Call You: '+ (props.callback/statePopulation[props.name]).toFixed(3) + '<br />Newsletter: '+ (props.newsletter/statePopulation[props.name]).toFixed(3) + '<br />Schedule an Appointment: '+ (props.appointment/statePopulation[props.name]).toFixed(3) + '<br />Video chat: '+ (props.videochat/statePopulation[props.name]).toFixed(3)
+				: 'Hover over a state');
+		};
+
+		info.addTo(map);
+
+		var hospitalIcon = L.icon({
+			iconUrl: 'icon/hospital-marker-41.png',
+			//zoomLevel = map.getZoom();
+			iconSize:     [41, 41] // size of the icon
+		});
+		// add markers to map
+		hospitalGeojson.features.forEach(function(marker) {
+			// make a marker for each feature and add to the map
+			L.marker(marker.geometry.coordinates, {icon: hospitalIcon}).addTo(map);
+		});
+		
+		
+		var stateInfoDict = {};
+		var stateDictName2Index = {};
+		var statePopulation = {};
+
+		var geojson, geojsonLabels;
+		// initialise each property for of geojson
+	    for (j = 0; j < states.features.length; j++) {
+			states.features[j].properties.total = 0;
+			states.features[j].properties.chat = 0;
+			states.features[j].properties.email = 0;
+			states.features[j].properties.appointment = 0;
+			states.features[j].properties.videochat = 0;
+			states.features[j].properties.callback = 0;
+			states.features[j].properties.newsletter = 0;
+			
+			stateDictName2Index[states.features[j].properties.name.toUpperCase()] = j;
+	    }
+
+        // Load the state population
+		d3.csv("data/US_state_population.csv", function (US_population) {
+			_.each(US_population, function (d) {
+				statePopulation[d.state] = (parseInt(d.population)/1000000).toFixed(3); //per 1000000 population
+			});
+		});
+		
+            //Read data for parallel coordinate
+             d3.csv("data/activity.csv", function (data) {
+                _.each(data, function (d, i) {
+                    d.index = d.index || i; //unique id
+					
+					var sState = d.State.toUpperCase();
+					
+					if(sState in stateDictName2Index){
+						//console.log(sState);
+						var myIndex = stateDictName2Index[sState];
+						
+						states.features[myIndex].properties.total += 1;
+						
+						
+						if (d['Engagement'] == 'Chat')
+							states.features[myIndex].properties.chat += 1;
+						else if (d['Engagement'] == 'Schedule an Appointment')
+							states.features[myIndex].properties.appointment += 1;
+						else if (d['Engagement'] == 'Email')
+							states.features[myIndex].properties.email += 1;
+						else if (d['Engagement'] == 'Video Chat')
+							states.features[myIndex].properties.videochat += 1;
+						else if (d['Engagement'] == 'Have Us Call You')
+							states.features[myIndex].properties.callback += 1;
+						else if (d['Engagement'] == 'Newsletter')
+							states.features[myIndex].properties.newsletter += 1;
+					}
+				});
+				//compute min, max per 1,000 population
+				_.each(states.features, function (d) {
+					//get state
+					if (d.properties.total/statePopulation[d.properties.name]>maxVal)
+						maxVal = d.properties.total/statePopulation[d.properties.name];
+					if (d.properties.total/statePopulation[d.properties.name]<minVal)
+						minVal = d.properties.total/statePopulation[d.properties.name];
+				});
+/*
+Layer with boundary
+*/
+				// add state layer
+				geojson = L.geoJson(states, {
+					style: style,
+					onEachFeature: onEachFeature
+				}).addTo(map);
+
+/*
+				// add label layer
+				geojsonLabels = L.geoJson(lgaCentroids, {
+					pointToLayer: function (feature, latlng) {
+						return  L.marker(latlng, {
+							clickable : false,
+							draggable : false,
+							icon: L.divIcon({
+								className: 'my-leaflet-div-icon',
+// 										html: feature.properties.name // remove for now
+							})
+						});
+					},
+				}).addTo(map);
+*/
+
+				var legend = L.control({position: 'bottomright'});
+
+				legend.onAdd = function (map) {
+
+					var div = L.DomUtil.create('div', 'info legend'),
+						labels = [];
+						
+					labels.push('<i style="background:' + engagementColors["Chat"] + '"></i> ' + 'Chat' + '<br>');
+					labels.push('<i style="background:' + engagementColors["Email"] + '"></i> ' + 'Email' + '<br>');
+					labels.push('<i style="background:' + engagementColors["Have Us Call You"] + '"></i> ' + 'Have Us Call You' + '<br>');
+					labels.push('<i style="background:' + engagementColors["Newsletter"] + '"></i> ' + 'Newsletter' + '<br>');
+					labels.push('<i style="background:' + engagementColors["Schedule an Appointment"] + '"></i> ' + 'Schedule an Appointment' + '<br>');
+					labels.push('<i style="background:' + engagementColors["Video Chat"] + '"></i> ' + 'Video Chat' + '<br>');
+
+					div.innerHTML = '<h4>Top Engagement by Colour</h4><br>' + labels.join('<br>');
+					return div;
+				};
+
+				legend.addTo(map);
+
+
+                //Bind data to parallel coordinate
+                parcoords.data(data)
+                        .hideAxis(["index","Interaction Type"])
+                        .render()
+                        .reorderable()
+                        .brushMode("1D-axes")
+                        .rate(300);
+
+                // setting up grid
+                var column_keys = d3.keys(data[0]);
+                var columns = column_keys.map(function(key,i) {
+					temp = {
+                        id: key,
+                        name: key,
+                        field: key,
+                        sortable: true};
+						
+					if (key=='Ads')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 140};
+					else if (key=='Campaign')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 35};
+					else if (key=='Creative')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 55};
+					else if (key=='Site')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 55};
+					else if (key=='Browser')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 70};
+					else if (key=='OS')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 60};
+					else if (key=='State')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 40};
+					else if (key=='Duration')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 60};
+					else if (key=='Engagement')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 40};
+					else if (key=='index')
+						temp = {
+							id: key,
+							name: key,
+							field: key,
+							sortable: true, 
+							width: 3};
+                    return temp;
+					/*{
+                        id: key,
+                        name: key,
+                        field: key,
+                        sortable: true}*/
+                });
+
+                var options = {
+                    enableCellNavigation: true,
+                    enableColumnReorder: false,
+                    multiColumnSort: false,
+                    forceFitColumns: true,
+                };
+
+                var dataView = new Slick.Data.DataView();
+                var grid = new Slick.Grid("#grid", dataView, columns, options);
+
+                // wire up model events to drive the grid
+                dataView.onRowCountChanged.subscribe(function (e, args) {
+                    grid.updateRowCount();
+                    grid.render();
+                });
+
+                dataView.onRowsChanged.subscribe(function (e, args) {
+                    grid.invalidateRows(args.rows);
+                    grid.render();
+                });
+
+                // column sorting
+                var sortcol = column_keys[0];
+                var sortdir = 1;
+
+                function comparer(a, b) {
+                    var x = a[sortcol], y = b[sortcol];
+                    return (x == y ? 0 : (x > y ? 1 : -1));
+                }
+
+                // click header to sort grid column
+                grid.onSort.subscribe(function (e, args) {
+                    sortdir = args.sortAsc ? 1 : -1;
+                    sortcol = args.sortCol.field;
+
+                    if ($.browser.msie && $.browser.version <= 8) {
+                        dataView.fastSort(sortcol, args.sortAsc);
+                    } else {
+                        dataView.sort(comparer, args.sortAsc);
+                    }
+                });
+
+                // highlight row in chart
+                grid.onMouseEnter.subscribe(function(e,args) {
+                    var i = grid.getCellFromEvent(e).row;
+                    var d = parcoords.brushed() || data;
+                    parcoords.highlight([d[i]]);
+                });
+
+                grid.onMouseLeave.subscribe(function(e,args) {
+                    parcoords.unhighlight();
+                });
+
+                // fill grid with data
+                gridUpdate(data);
+				
+				// update grid on brush
+                parcoords.on("brush", function (d) {
+					filtered = d;
+                    isSelected = true;
+                    gridUpdate(d);
+                    //update map
+					states.features.map(function (d) {
+						d.properties.total = 0;
+						d.properties.chat = 0;
+						d.properties.email = 0;
+						d.properties.appointment = 0;
+						d.properties.videochat = 0;
+						d.properties.callback = 0;
+						d.properties.newsletter = 0;
+					});
+					
+					maxVal = -1;
+					minVal = 99;
+					//geojsonLabels.getLayers().map(function (d) { d._icon.innerHTML = ""; })
+                    _.each(d, function (k, i) {
+						var sState = k.State.toUpperCase();
+						
+						if(sState in stateDictName2Index){
+							var myIndex = stateDictName2Index[sState];
+						
+							states.features[myIndex].properties.total += 1;
+
+							if (k['Engagement'] == 'Chat')
+								states.features[myIndex].properties.chat += 1;
+							else if (k['Engagement'] == 'Schedule an Appointment')
+								states.features[myIndex].properties.appointment += 1;
+							else if (k['Engagement'] == 'Email')
+								states.features[myIndex].properties.email += 1;
+							else if (k['Engagement'] == 'Video Chat')
+								states.features[myIndex].properties.videochat += 1;
+							else if (k['Engagement'] == 'Have Us Call You')
+								states.features[myIndex].properties.callback += 1;
+							else if (k['Engagement'] == 'Newsletter')
+								states.features[myIndex].properties.newsletter += 1;
+						}
+                    });
+					
+					//compute min, max per 1,000 population
+					_.each(states.features, function (d) {
+						//get state
+						if (d.properties.total/statePopulation[d.properties.name]>maxVal)
+							maxVal = d.properties.total/statePopulation[d.properties.name]
+						if (d.properties.total/statePopulation[d.properties.name]<minVal)
+							minVal = d.properties.total/statePopulation[d.properties.name]
+					});
+
+					//map.removeControl(legend);
+					//legend.addTo(map);
+
+					refreshMap();
+                });
+
+
+                function gridUpdate(data) {
+                    dataView.beginUpdate();
+                    dataView.setItems(data);
+                    dataView.endUpdate();
+                };
+
+                function refreshMap() {
+					// go through updateLGA, or edit the values directly in the geojson layers
+					geojson.getLayers().map(function (d) {
+						geojson.resetStyle(d);
+					})
+                }
+
+                $('#select_all').click(function () {
+                    parcoords.brushReset();
+					
+                    refreshMap();
+
+                    //Bind new data to parallel coordinate
+                    parcoords.data(data)
+                            .hideAxis(["index"])
+                            .render()
+                            .reorderable()
+                            .brushMode("1D-axes")
+                            .rate(400);
+
+                    parcoords.resize();
+                    parcoords.updateAxes();
+                    // fill grid with new data
+                    gridUpdate(filtered);
+
+                    isSelected = false;
+                });
+                $('#keep_selected').click(function () {
+                    if (!isSelected) {
+                        alert("No data selected.\nPlease filter some data then try again.");
+                    }
+                    else {
+                        refreshMap();
+
+                        //Bind new data to parallel coordinate
+                        parcoords.data(filtered)
+                                .hideAxis(["index"])
+                                .render()
+                                .reorderable()
+                                .brushMode("1D-axes")
+                                .rate(400);
+
+                        parcoords.resize();
+                        parcoords.updateAxes();
+                        // fill grid with new data
+                        gridUpdate(filtered);
+
+                        isSelected = false;
+                    }
+                    //parcoords.brushUpdated(filtered);
+                });
+/*
+                $('#show_abs').click(function () {
+	                map.removeLayer(geojson);
+					geojson = L.geoJson(population, {
+						style: redStyle,
+						onEachFeature: onEachFeature
+					});
+					map.addLayer(geojson);
+                });
+*/
+            });//END Read data for parallel coordinate
+		//});
+		</script>
+	</body>
+</html>

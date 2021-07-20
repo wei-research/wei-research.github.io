@@ -1,0 +1,679 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <title>NSW Human Service Data Analysis - by the Advanced Analytics Institute, UTS</title>
+
+        <!-- d3 -->
+        <script type="text/javascript" src="lib/d3/d3.min.js"></script>
+        <script type="text/javascript" src="lib/d3/d3.csv.min.js"></script>
+        <script type="text/javascript" src="lib/d3/d3.parcoords.js"></script>
+
+        <!-- other libs -->
+        <script type="text/javascript" src="lib/jquery.js"></script>
+        <script type="text/javascript" src="lib/underscore.js"></script>
+
+		<!-- leaflet -->
+		<script src="lib/leaflet/leaflet.js"></script>
+		<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+
+		<!-- nsw map -->
+		<script type="text/javascript" src="borders/lgaBorders.geojson"></script>
+		<script type="text/javascript" src="data/population.geojson"></script>
+
+        <!-- SlickGrid -->
+        <script type="text/javascript" src="lib/slickgrid/jquery.event.drag-2.0.min.js"></script>
+        <script type="text/javascript" src="lib/slickgrid/slick.core.js"></script>
+        <script type="text/javascript" src="lib/slickgrid/slick.grid.js"></script>
+        <script type="text/javascript" src="lib/slickgrid/slick.dataview.js"></script>
+
+        <!-- lgaNames -->
+        <script src="data/latlong.js"></script>
+        <script src="borders/lgaCentroids.ids.geojson"></script>
+
+        <!-- StyleSheet -->
+        <link rel="stylesheet" href="lib/slickgrid/slick.grid.css" type="text/css" />
+        <link rel="stylesheet" href="lib/d3/d3.parcoords.css" type="text/css" >
+        <link rel="stylesheet" href="style.css" type="text/css" charset="utf-8" />
+
+        <style>
+            .wrapper {
+                width: 3740px;
+/*                 width: 5760px;  */
+                height: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
+            .col {
+                position: relative;
+                display: inline-block;
+
+                vertical-align: top;
+            }
+
+            .col-content {
+                white-space: normal;
+            }
+
+            .left {
+                width: 28%;
+            }
+            .middle {
+                width: 50%;
+
+            }
+            .right {
+                width: 22%;
+
+            }
+            #map {
+                position: relative;
+		        top: 20px;
+		        width: 100%;
+		        height: 900px;
+            }
+
+            .stations, .stations svg {
+                position: absolute;
+            }
+
+            .stations svg {
+                width: 80px;
+                height: 80px;
+                padding-right: 100px;
+                font: 10px sans-serif;
+            }
+
+            #paracoord {
+		        position: relative;
+		        width: 100%;
+				top: 50px;
+		        height: 880px;
+	        }
+            #grid {
+		        position: relative;
+		        width: 100%;
+				top: 20px;
+		        height: 900px;
+	        }
+            .slick-row:hover {
+		        font-weight: bold;
+		        color: #069;
+
+
+			// leaflet css
+			}
+			.info {
+				padding: 6px 8px;
+				font: 14px/16px Arial, Helvetica, sans-serif;
+				background: white;
+				background: rgba(255,255,255,0.8);
+				box-shadow: 0 0 15px rgba(0,0,0,0.2);
+				border-radius: 5px;
+			}
+			.info h4 {
+				margin: 0 0 5px;
+				color: #777;
+			}
+
+
+			.legend {
+				text-align: left;
+				line-height: 18px;
+				color: #555;
+			}
+			.legend i {
+				width: 18px;
+				height: 18px;
+				float: left;
+				margin-right: 8px;
+				opacity: 0.7;
+			}
+			.my-leaflet-div-icon {
+				color: #DDD;
+        width: auto;
+        text-shadow:
+          -1px -1px 1px black,
+           1px -1px 1px black,
+          -1px  1px 1px black,
+           1px  1px 1px black;
+			}
+
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <div class="col left">
+                <div id="main">
+                    <div class="widgets">
+                        <h3><span style="color: #1F6E0C; font-family: Baskerville, 'Palatino Linotype', Palatino, 'Century Schoolbook L', 'Times New Roman', serif; font-style: normal; font-size: x-large;">NSW Human Service Data Analysis &#8212; by the Advanced Analytics Institute, UTS</span></h3>
+						</div>
+                </div>
+                <div id="map"></div>
+            </div>
+            <div class="col middle">
+                <div id="parcoord" class="parcoords" style="height =650px;"></div>
+            </div>
+            <div class="col right">
+                <div id="grid"></div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+
+		// lavender to blue (colourbrewer)
+		var myCols = [
+			'#fff7fb',
+			'#ece7f2',
+			'#d0d1e6',
+			'#a6bddb',
+			'#74a9cf',
+			'#3690c0',
+			'#1480b8', // added by me
+			'#0570b0',
+			'#045a8d',
+			'#023858'
+		];
+
+		var myColsGreen = [
+			'#f7fcf5',
+			'#e5f5e0',
+			'#c7e9c0',
+			'#a1d99b',
+			'#74c476',
+			'#41ab5d',
+			'#238b45',
+			'#006d2c',
+			'#00441b',
+			'#002210'
+		];
+
+		myCols = myColsGreen;
+
+		// red yellow brown
+		var myColsRed = [
+			'#ffffcc',
+			'#ffeda0',
+			'#fed976',
+			'#feb24c',
+			'#fd8d3c',
+			'#fc4e2a',
+			'#e31a1c',
+			'#bd0026',
+			'#800026',
+			'#600015'
+		];
+
+		// colours used in the SEIFA studies (red, yellow, blue)
+		var seifaCols = [
+			'#313695',  //blue
+			'#4575b4',
+			'#74add1',
+			'#abd9e9',
+			'#e0f3f8',
+			'#fee090',
+			'#fdae61',
+			'#f46d43',
+			'#d73027',
+			'#a50026' // red
+		];
+
+        var lgas = lgaBorders;
+
+				var minVal = -1, maxVal = -1;
+				// colour map for parallel coordinates lines
+        var colorMap = d3.scale.linear()
+                               .domain([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+                               .range(seifaCols.reverse())
+                                .interpolate(d3.interpolateRgb);
+
+        var colorTextMap = d3.scale.linear()
+                            .domain([0, 10, 30, 71, 72, 73, 80, 100])
+                            .range(["darkblue", "black", "black", "black", "black", "white", "white"]);
+
+        var padding = 35;
+
+        var layer, overlay;
+        var filtered;
+
+        var isSelected = false;
+
+		// create leaflet map
+		var map = L.map('map', {zoomControl: false}).setView([-33, 148], 7);
+
+		// prevToken = pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw
+
+		var myToken = 'pk.eyJ1IjoiZHlobCIsImEiOiJjaWtubG5uMWYwc3BmdWNqN2hlMzFsNDhvIn0.027tda69GVKbxiPnkEBDAw';
+
+
+		L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + myToken, {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+				'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+			id: 'mapbox.streets',
+			//id: 'mapbox.basic',
+			//id: 'mapbox.emerald',
+			//id: 'mapbox.light',
+			//id: 'mapbox.bright',
+			//id: 'mapbox.dark',
+			//id: 'mapbox.satellite',
+// 			id: 'dyhl.cilltzgc0006j9dlyzll3jikw',
+// 			styleLayer: 'mapbox://styles/dyhl/cilltzgc0006j9dlyzll3jikw'
+		}).addTo(map);
+
+		// get color depending on population density value
+		// from SEIFA/ColorBrewer:
+		function getColor(d) {
+			return seifaCols[9 - Math.floor(d / 10.0)];
+		}
+
+		function getColorScalar(d) {
+			var myVal = 100.0 * (d - minVal) / (maxVal - minVal);
+			// using myCols
+// 			return myCols[9 - Math.floor(myVal / 10.0)]; // reversed
+			return myCols[Math.floor(myVal / 10.0) - 1];
+		}
+
+		function getColorScalarRed(d) {
+			return myColsRed[9 - Math.floor(d / 10.0)];
+		}
+
+		function showIt(d) {
+			return d > 0 ? 0.75 : 0;
+		}
+
+		function style(feature) {
+			return {
+				weight: 1,
+				opacity: showIt(feature.properties.data),
+				color: 'white',
+				dashArray: '3',
+				fillOpacity: 0.8 * showIt(feature.properties.data),
+				fillColor: getColorScalar(feature.properties.data)
+// 						fillColor: getColor(feature.properties.seifa)
+			};
+		}
+
+		function redStyle(feature) {
+			return {
+				weight: 1,
+				opacity: showIt(feature.properties.data),
+				color: 'white',
+				dashArray: '3',
+				fillOpacity: 0.8 * showIt(feature.properties.data),
+				fillColor: getColorScalarRed(feature.properties.data)
+// 						fillColor: getColor(feature.properties.seifa)
+			};
+		}
+
+		function resetHighlight(e) {
+			geojson.resetStyle(e.target);
+			info.update();
+		}
+
+		function zoomToFeature(e) {
+			map.fitBounds(e.target.getBounds());
+		}
+
+		function onEachFeature(feature, layer) {
+			layer.on({
+				mouseover: highlightFeature,
+				mouseout: resetHighlight,
+				click: zoomToFeature
+			});
+		}
+
+		function highlightFeature(e) {
+			var layer = e.target;
+
+			if (layer._layers) {
+				console.log(layer);
+				layer.eachLayer(function (myLayer) {
+					console.log(myLayer);
+					myLayer.setStyle({
+						weight: myLayer.options ? (myLayer.options.opacity > 0 ? 3 : 0) : 0,
+						color: '#666',
+						dashArray: '',
+// 						fillOpacity: myLayer.options ? (myLayer.options.opacity > 0 ? 1 : 0) : 0
+					});
+				});
+			} else {
+				layer.setStyle({
+					weight: layer.options ? (layer.options.opacity > 0 ? 3 : 0) : 0,
+					color: '#666',
+					dashArray: '',
+// 					fillOpacity: layer.options ? (layer.options.opacity > 0 ? 1 : 0) : 0
+				});
+			}
+
+			if (!L.Browser.ie && !L.Browser.opera) {
+				layer.bringToFront();
+			}
+
+			info.update(layer.feature.properties);
+		}
+
+        // Create parallel Coordinate
+        var parcoords = d3.parcoords()("#parcoord")
+            .alpha(0.1)
+            .mode("queue") // progressive rendering
+            .height(900)
+            .width(1900)
+            .margin({
+                top: 60,
+                left: 0,
+                right: 0,
+                bottom: 16
+            })
+            .color(function (d) { return colorMap(d.SEIFA) });
+
+		// control that shows state info on hover
+		var info = L.control({position: 'topright'});
+
+		info.onAdd = function (map) {
+			this._div = L.DomUtil.create('div', 'info');
+			this.update();
+			return this._div;
+		};
+
+		info.update = function (props) {
+			this._div.innerHTML = (props && props.data > 0 ?
+				'<h4>' + props.name + '</h4><br />SEIFA: ' + props.seifa +'<br />Contracts: '+ props.data
+				: 'Hover over an LGA');
+		};
+
+		info.addTo(map);
+
+
+		var lgaDict = {};
+		var lgaDictByName = {};
+
+
+		var geojson, geojsonLabels;
+		// initialise each property for of geojson
+	    for (j = 0; j < lgas.features.length; j++) {
+// 			 			lgas.features[j].properties.seifa = Math.round(Math.random() *100) + 1;
+			lgas.features[j].properties.data = 0;
+			lgas.features[j].properties.seifa = 0;
+// 						console.log(lgas.features[j].properties.id, lgaCentroids.features[j].properties.id);
+			lgaDict[lgas.features[j].properties.id] = [lgas.features[j]];
+// 					lgaDictByName[lgas.features[j].properties.name] = [lgas.features[j]];
+	    }
+
+	    // now i have a reference to each layer by id (finally!)
+	    for (j = 0; j < lgaCentroids.features.length; j++) {
+			lgaDict[lgaCentroids.features[j].properties.id].push(lgaCentroids.features[j]);
+			lgaDictByName[lgaCentroids.features[j].properties.name] = lgaCentroids.features[j];
+	    }
+
+        // Load the LGA data
+        d3.csv("data/lga.csv", function (lga) {
+            //Read data for parallel coordinate
+             d3.csv("data/HSDHdata_count.csv", function (data) {
+                _.each(data, function (d, i) {
+                    d.index = d.index || i; //unique id
+                    var myId = lgaDictByName[d.LGA.toUpperCase()].properties.id;
+					lgaDict[myId][0].properties.data += parseInt(d['Contract Count']);
+					lgaDict[myId][0].properties.seifa = d.SEIFA;
+
+                });
+
+				// add lga layer
+				geojson = L.geoJson(lgas, {
+					style: style,
+					onEachFeature: onEachFeature
+				}).addTo(map);
+
+				// add label layer
+				geojsonLabels = L.geoJson(lgaCentroids, {
+					pointToLayer: function (feature, latlng) {
+						return  L.marker(latlng, {
+							clickable : false,
+							draggable : false,
+							icon: L.divIcon({
+								className: 'my-leaflet-div-icon',
+// 										html: feature.properties.name // remove for now
+							})
+						});
+					},
+				}).addTo(map);
+
+
+				var legend = L.control({position: 'bottomright'});
+
+				legend.onAdd = function (map) {
+
+					var div = L.DomUtil.create('div', 'info legend'),
+		// 				grades = [0, 20, 40, 60, 80, 100], // 5 colours
+						grades = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90], // 10 colours
+
+						labels = [],
+						from, to;
+
+// 							for (var i = 0; i < grades.length; i++) {
+					for (var i = grades.length - 1; i >= 0; --i) {
+						from = parseInt(minVal + (maxVal - minVal) * (i / grades.length));
+						to = parseInt(minVal + (maxVal - minVal) * ((i+ 1) / grades.length));
+						labels.push(
+							'<i style="background:' + myCols[i] + '"></i> ' +
+							(i + 1) +' (' + from + '&ndash;' + to + ')');
+					}
+
+					div.innerHTML = '<h4>NGO Contract Count</h4>(by decile)<br />' + labels.join('<br>');
+					return div;
+				};
+
+				legend.addTo(map);
+
+                //Bind data to parallel coordinate
+                parcoords.data(data)
+                        .hideAxis(["LGA", "ID", "index", "Contract Count"])
+                        .render()
+                        .reorderable()
+                        .brushMode("1D-axes")
+                        .rate(400);
+
+                // setting up grid
+                var column_keys = d3.keys(data[0]);
+                var columns = column_keys.map(function(key,i) {
+                    return {
+                        id: key,
+                        name: key,
+                        field: key,
+                        sortable: true}
+                });
+
+                var options = {
+                    enableCellNavigation: true,
+                    enableColumnReorder: false,
+                    multiColumnSort: false,
+//                     forceFitColumns: true,
+                };
+
+                var dataView = new Slick.Data.DataView();
+                var grid = new Slick.Grid("#grid", dataView, columns, options);
+
+                grid.autosizeColumns();
+
+                // wire up model events to drive the grid
+                dataView.onRowCountChanged.subscribe(function (e, args) {
+                    grid.updateRowCount();
+                    grid.render();
+                });
+
+                dataView.onRowsChanged.subscribe(function (e, args) {
+                    grid.invalidateRows(args.rows);
+                    grid.render();
+                });
+
+                // column sorting
+                var sortcol = column_keys[0];
+                var sortdir = 1;
+
+                function comparer(a, b) {
+                    var x = a[sortcol], y = b[sortcol];
+                    return (x == y ? 0 : (x > y ? 1 : -1));
+                }
+
+                // click header to sort grid column
+                grid.onSort.subscribe(function (e, args) {
+                    sortdir = args.sortAsc ? 1 : -1;
+                    sortcol = args.sortCol.field;
+
+                    if ($.browser.msie && $.browser.version <= 8) {
+                        dataView.fastSort(sortcol, args.sortAsc);
+                    } else {
+                        dataView.sort(comparer, args.sortAsc);
+                    }
+                });
+
+                // highlight row in chart
+                grid.onMouseEnter.subscribe(function(e,args) {
+                    var i = grid.getCellFromEvent(e).row;
+                    var d = parcoords.brushed() || data;
+                    parcoords.highlight([d[i]]);
+                });
+
+                grid.onMouseLeave.subscribe(function(e,args) {
+                    parcoords.unhighlight();
+                });
+
+                // fill grid with data
+                gridUpdate(data);
+
+                // update grid on brush
+                parcoords.on("brush", function (d) {
+					minVal = maxVal = -1;
+                    filtered = d;
+                    isSelected = true;
+                    gridUpdate(d);
+                    //update map
+					lgas.features.map(function (d) {d.properties.data = 0; });
+					geojsonLabels.getLayers().map(function (d) { d._icon.innerHTML = ""; })
+                    _.each(d, function (k, i) {
+                        var myId = lgaDictByName[k.LGA.toUpperCase()].properties.id;
+						lgaDict[myId][0].properties.data += parseInt(k['Contract Count']);
+						if (minVal < 0 || minVal > lgaDict[myId][0].properties.data) {
+							minVal = lgaDict[myId][0].properties.data;
+						}
+						if (maxVal < 0 || maxVal < lgaDict[myId][0].properties.data) {
+							maxVal = lgaDict[myId][0].properties.data;
+						}
+
+						lgaDict[myId][0].properties.seifa = k.SEIFA;
+                    });
+
+					map.removeControl(legend);
+					legend.addTo(map);
+
+                    refreshMap(lga);
+                });
+
+
+                function gridUpdate(data) {
+                    dataView.beginUpdate();
+                    dataView.setItems(data);
+                    dataView.endUpdate();
+                };
+
+                function refreshMap(updatedLGA) {
+					// go through updateLGA, or edit the values directly in the geojson layers
+					geojson.getLayers().map(function (d) {
+						geojson.resetStyle(d);
+// 								console.log(d.feature.properties.name, d.feature.properties.id, d.feature.properties.data);
+						geojsonLabels.getLayers().forEach(function (z) {
+							if (z.feature.properties.id == d.feature.properties.id) {
+// 										console.log("match");
+								if (d.feature.properties.data > 0) {
+//  											z._icon.innerHTML = z.feature.properties.name + "<br>" + d.feature.properties.data;
+									z._icon.innerHTML = d.feature.properties.data;
+								} else {
+									z._icon.innerHTML = "";
+								}
+							}
+						});
+					})
+                }
+
+                $('#select_all').click(function () {
+                    parcoords.brushReset();
+                    //Recalculate LGA's contracts
+                    for (var i = 0; i < _.size(lga) ; i++) {
+                        lga[i].count = 0;
+                    }
+                    _.each(data, function (d, i) {
+                        if (_.include(lgaNames, d.LGA)) {
+                            lga[_.indexOf(lgaNames, d.LGA)].count = lga[_.indexOf(lgaNames, d.LGA)].count + 1;
+                        }
+                    });
+                    refreshMap(lga);
+
+                    //Bind new data to parallel coordinate
+                    parcoords.data(data)
+                            .hideAxis(["LGA", "ID", "index", "Contract Count"])
+                            .render()
+                            .reorderable()
+                            .brushMode("1D-axes")
+                            .rate(400);
+
+                    parcoords.resize();
+                    parcoords.updateAxes();
+                    // fill grid with new data
+                    gridUpdate(filtered);
+
+
+                    isSelected = false;
+                });
+                $('#keep_selected').click(function () {
+                    if (!isSelected) {
+                        alert("No data selected.\nPlease filter some data then try again.");
+                    }
+                    else {
+                        //removeddata = _.difference(data, filtered);
+//                                 data = filtered;
+
+                        //Recalculate LGA's contracts
+                        for (var i = 0; i < _.size(lga) ; i++) {
+                            lga[i].count = 0;
+                        }
+                        _.each(data, function (d, i) {
+                            if (_.include(lgaNames, d.LGA)) {
+                                lga[_.indexOf(lgaNames, d.LGA)].count = lga[_.indexOf(lgaNames, d.LGA)].count + 1;
+                            }
+                        });
+                        refreshMap(lga);
+
+                        //Bind new data to parallel coordinate
+                        parcoords.data(filtered)
+                                .hideAxis(["LGA", "ID", "index", "Contract Count"])
+                                .render()
+                                .reorderable()
+                                .brushMode("1D-axes")
+                                .rate(400);
+
+                        parcoords.resize();
+                        parcoords.updateAxes();
+                        // fill grid with new data
+                        gridUpdate(filtered);
+
+                        isSelected = false;
+                    }
+                    //parcoords.brushUpdated(filtered);
+                });
+
+                $('#show_abs').click(function () {
+	                map.removeLayer(geojson);
+					geojson = L.geoJson(population, {
+						style: redStyle,
+						onEachFeature: onEachFeature
+					});
+					map.addLayer(geojson);
+                });
+
+            });//END Read data for parallel coordinate
+		});
+		</script>
+	</body>
+</html>

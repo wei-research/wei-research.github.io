@@ -1,0 +1,62 @@
+var hospitalGeojson = {
+  type: 'FeatureCollection',
+  features: [{
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [40.018895, -75.099034]
+    },
+    properties: {
+      title: 'Eastern hospital',
+      description: 'Eastern hospital',
+	  address:'1331 East Wyoming Avenue Philadelphia, PA 19124'
+    }
+  },
+  {
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [42.448768, -87.827666]
+    },
+    properties: {
+      title: 'Midwestern hospital',
+      description: 'Midwestern hospital',
+	  address:'2520 Elisha Avenue Zion, IL 60099'
+    }
+  },
+  {
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [33.384770, -84.757712]
+    },
+    properties: {
+      title: 'Southeastern hospital',
+      description: 'Southeastern hospital',
+	  address:'600 Celebrate Life Parkway Newnan, GA 30265'
+    }
+  },{
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [36.051496, -95.863294]
+    },
+    properties: {
+      title: 'Southwestern hospital',
+      description: 'Southwestern hospital',
+	  address:'10109 E. 79th Street Tulsa, OK 74133'
+    }
+  },{
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [33.453982, -112.364325]
+    },
+    properties: {
+      title: 'Western hospital',
+      description: 'Western hospital',
+	  address:'14200 W. Celebrate Life Way Goodyear, AZ 85338'
+    }
+  }]
+};
+	
