@@ -3,6 +3,14 @@ layout: default
 ---
 
 
+This webpage presents a list of research topics for PhD and Master by Research programs offered by the UTS School of Computer Science. These projects are intended to provide Honours and Master by Coursework students with potential pathways towards pursuing higher research degrees.
+
+For inquiries regarding the administrative procedures for applying to PhD or Master by Research programs, please contact <CS_HDRConversion@uts.edu.au>.
+
+For inquiries regarding the technical aspects of any of the projects listed below, please contact the corresponding supervisor directly.
+
+Click on each topic below to see more details.
+
 
 ### Adversarial Machine Learning and Cyber Security - Attacks and Defense on AI Models
 
