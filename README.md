@@ -1,3 +1,3 @@
-# weiliu-research.github.io
+# wei-research.github.io
 
 Homepage repository
