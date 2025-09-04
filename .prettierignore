@@ -1,0 +1,6 @@
+# Ignore third-party and generated assets
+vendor/
+d3/
+assets/images/
+*.min.*
+*.bak
