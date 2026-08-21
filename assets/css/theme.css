@@ -1,0 +1,414 @@
+/* ---------------------------------------------------------------
+   Wei Liu — site theme
+   Same content and page structure as before; this file only
+   controls presentation (colour, type, spacing, layout).
+------------------------------------------------------------------ */
+
+:root {
+  --bg: #f7f7f7;
+  --surface: #6f97c2;
+  --ink: #1e1e1e;
+  --ink-soft: #4a4a4a;
+  --accent: #a43f49;
+  --accent-soft: #f4e4e6;
+  --rule: #e2e2e2;
+  --focus: #a43f49;
+  --link: #1a3a6b;
+  --bar: #1d4ed8;
+  --sidebar-width: 380px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17191b;
+    --surface: #2c4560;
+    --ink: #f2f2f2;
+    --ink-soft: #a8a8a8;
+    --accent: #d17b83;
+    --accent-soft: #34181b;
+    --rule: #2a2d2f;
+    --focus: #d17b83;
+    --link: #6fa3d8;
+    --bar: #3b82f6;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--link);
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+h3 {
+  position: relative;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-weight: 600;
+  font-size: 26px;
+  color: var(--ink);
+  margin: 0 0 20px;
+  padding-top: 16px;
+  letter-spacing: -0.01em;
+}
+
+h3::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--bar);
+}
+
+p {
+  margin: 0 0 16px;
+}
+
+b,
+strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+em {
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* Empty structural spacer divs left over from the old template */
+.section-heading {
+  display: none;
+}
+
+/* ---------------------------------------------------------------
+   Sidebar / navigation
+------------------------------------------------------------------ */
+
+.responsive-nav {
+  position: relative;
+}
+
+.icon-btn {
+  appearance: none;
+  border: none;
+  background: var(--surface);
+  color: var(--ink);
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+#menu-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 30;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.i-bars {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+}
+.i-bars::before,
+.i-bars::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+}
+.i-bars::before {
+  top: -6px;
+}
+.i-bars::after {
+  top: 6px;
+}
+
+.i-close {
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+.i-close::before,
+.i-close::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: -1px;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+}
+.i-close::before {
+  transform: rotate(45deg);
+}
+.i-close::after {
+  transform: rotate(-45deg);
+}
+
+#menu-close {
+  margin-bottom: 18px;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(86vw, 340px);
+  background: var(--surface);
+  padding: 20px 26px 32px;
+  overflow-y: auto;
+  z-index: 39;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  box-shadow: 1px 0 0 var(--rule), 4px 0 24px -8px rgba(20, 24, 20, 0.12);
+  --ink: #000;
+  --ink-soft: #000;
+}
+
+.menu.open {
+  transform: translateX(0);
+  box-shadow:
+    1px 0 0 var(--rule),
+    4px 0 24px -8px rgba(20, 24, 20, 0.12),
+    0 0 0 2000px rgba(10, 12, 11, 0.35);
+}
+
+.menu .container {
+  text-align: center;
+}
+
+.menu .image {
+  display: none; /* empty in current content */
+}
+
+.author-content h4 {
+  margin: 6px 0 10px;
+  font-size: 21px;
+}
+
+.author-content h4 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.author-content p {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  text-align: center !important;
+}
+
+.author-content br {
+  content: "";
+}
+
+.main-nav {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+}
+
+.main-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.main-menu li {
+  margin: 0;
+}
+
+.main-menu a {
+  display: block;
+  padding: 9px 4px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-decoration: none;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.main-menu a:hover {
+  color: var(--ink);
+}
+
+.main-menu li.active a {
+  color: var(--link);
+  font-weight: 600;
+}
+
+.social-network {
+  margin-top: 24px;
+}
+
+/* Desktop: persistent sidebar, no toggle needed */
+@media (min-width: 960px) {
+  #menu-toggle {
+    display: none;
+  }
+  #menu-close {
+    display: none;
+  }
+  .menu {
+    position: fixed;
+    width: var(--sidebar-width);
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Content
+------------------------------------------------------------------ */
+
+#page-wraper > .section {
+  padding: 64px clamp(20px, 5vw, 64px);
+  border-top: 1px solid var(--rule);
+}
+
+#page-wraper > .section:first-of-type {
+  border-top: none;
+  padding-top: 56px;
+}
+
+@media (min-width: 960px) {
+  #page-wraper > .section {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+.section .container {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.left-image-post .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.left-image-post .col-md-3 {
+  flex: 0 0 260px;
+}
+
+.left-image-post .col-md-8 {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.left-image img {
+  width: 100%;
+  max-width: 260px;
+  border-radius: 14px;
+  display: block;
+}
+
+.right-text p {
+  color: var(--ink);
+  font-size: 16.5px;
+}
+
+.right-text sup {
+  color: var(--accent);
+}
+
+/* Publication / grant / code / team / ancestry lists */
+.right-text ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.right-text ul ul {
+  margin-top: 4px;
+}
+
+.right-text li {
+  padding: 6px 0;
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+
+.right-text li a {
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.right-text li a:hover {
+  border-bottom-color: var(--link);
+}
+
+.right-text > p > b:only-child,
+.right-text > p > strong:only-child {
+  display: inline-block;
+  margin-top: 18px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ---------------------------------------------------------------
+   Contact / footer section
+------------------------------------------------------------------ */
+
+.contact-me {
+  padding-bottom: 90px !important;
+}
+
+.copyright-text p {
+  color: var(--ink-soft);
+  font-size: 13.5px;
+}
+
+/* ---------------------------------------------------------------
+   Motion
+------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .menu {
+    transition: none;
+  }
+}
