@@ -821,3 +821,14 @@ section.contact-me {
         margin-bottom: 20px;
     }
 }
+
+/* About Me: align photo and bio */
+.about-me .left-image-post .row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.about-me .left-image img {
+    width: 100%;
+    height: auto;
+}
